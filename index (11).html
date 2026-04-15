@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ze Tableau</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap');
+:root{--bg:#0e0d0b;--surface:#1a1814;--gold:#c9a84c;--gold-dim:#7a6230;--cream:#f0e8d5;--muted:#4a4540;--text:#d4c9b0;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;padding:1.5rem 1rem 3rem;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,.07) 0%,transparent 60%);pointer-events:none;}
+h1{font-family:'Playfair Display',serif;font-size:clamp(1.3rem,5vw,2rem);color:var(--gold);letter-spacing:.08em;text-align:center;margin-bottom:.2rem;}
+.subtitle{font-size:.58rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-bottom:1.5rem;text-align:center;}
+
+/* NAV TABS */
+.nav-tabs{display:flex;border:1px solid var(--gold-dim);border-radius:3px;margin-bottom:1.5rem;overflow:hidden;max-width:500px;margin-left:auto;margin-right:auto;}
+.nav-tab{flex:1;background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:9px 6px;cursor:pointer;transition:all .2s;text-align:center;}
+.nav-tab.active{background:var(--gold-dim);color:var(--cream);}
+.nav-tab:hover:not(.active){color:var(--gold);}
+
+/* SECTION */
+.section{display:none;max-width:700px;margin:0 auto;}
+.section.active{display:block;}
+
+/* SEARCH */
+.search-box{width:100%;background:var(--surface);border:1px solid #2a2520;color:var(--text);font-family:'DM Mono',monospace;font-size:.7rem;padding:.6rem .9rem;border-radius:3px;outline:none;margin-bottom:1rem;}
+.search-box:focus{border-color:var(--gold-dim);}
+
+/* CATEGORY HEADER */
+.cat-header{font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-dim);margin:1.2rem 0 .5rem;padding-bottom:.3rem;border-bottom:1px solid #2a2520;}
+
+/* GRID */
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.5rem;margin-bottom:.5rem;}
+@media(max-width:400px){.items-grid{grid-template-columns:repeat(2,1fr);}}
+
+/* ITEM CARD */
+.item-card{background:var(--surface);border:1px solid #2a2520;border-radius:3px;padding:.7rem .8rem;cursor:pointer;transition:all .15s;user-select:none;}
+.item-card:active{transform:scale(.97);}
+.item-card.selected{border-color:var(--gold);background:rgba(201,168,76,.1);}
+.item-card.harmony{border-color:#7eb88a;background:rgba(126,184,138,.08);}
+.item-card.contrast{border-color:#c97a4c;background:rgba(201,122,76,.08);}
+.item-card.dimmed{opacity:.25;}
+.item-card.spirit-compat{border-color:var(--gold-dim);background:rgba(201,168,76,.06);}
+.card-name{font-family:'Playfair Display',serif;font-size:.88rem;color:var(--gold);font-style:italic;margin-bottom:.15rem;}
+.card-profile{font-size:.55rem;color:var(--muted);line-height:1.4;}
+.card-badge{font-size:.48rem;letter-spacing:.12em;text-transform:uppercase;margin-top:.2rem;}
+.card-badge.h{color:#7eb88a;}.card-badge.c{color:#c97a4c;}
+
+/* DETAIL PANEL */
+.detail-panel{background:var(--surface);border:1px solid var(--gold-dim);border-radius:3px;padding:1.2rem 1.3rem;margin-bottom:1.2rem;}
+.detail-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold);font-style:italic;margin-bottom:.6rem;}
+.detail-type{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:.8rem;}
+.detail-type.h{color:#7eb88a;}.detail-type.c{color:#c97a4c;}.detail-type.s{color:var(--gold);}
+.detail-row{margin-bottom:.7rem;}
+.detail-label{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.25rem;}
+.detail-text{font-size:.7rem;color:var(--text);line-height:1.75;opacity:.9;}
+.detail-note{font-size:.55rem;color:var(--muted);font-style:italic;margin-top:.4rem;}
+.pills{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.25rem;}
+.pill{font-size:.6rem;padding:3px 9px;border-radius:20px;cursor:pointer;transition:all .15s;}
+.pill:active{transform:scale(.95);}
+.pill.h{background:rgba(126,184,138,.12);border:1px solid rgba(126,184,138,.35);color:#7eb88a;}
+.pill.c{background:rgba(201,122,76,.12);border:1px solid rgba(201,122,76,.35);color:#c97a4c;}
+.pill.s{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.35);color:var(--gold);}
+.pill.neutral{background:rgba(201,168,76,.08);border:1px solid #2a2520;color:var(--text);}
+.back-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold-dim);font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;padding:5px 14px;cursor:pointer;transition:all .2s;border-radius:2px;margin-top:.8rem;}
+.back-btn:active{background:var(--gold-dim);color:var(--cream);}
+
+/* NOTES */
+.notes-section{margin-top:1rem;border-top:1px solid #2a2520;padding-top:.8rem;}
+.notes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem;}
+.notes-title{font-size:.52rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-dim);}
+.add-note-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold-dim);font-family:'DM Mono',monospace;font-size:.6rem;padding:3px 10px;cursor:pointer;transition:all .15s;border-radius:2px;}
+.add-note-btn:active{background:var(--gold-dim);color:var(--cream);}
+.note-entry{background:rgba(201,168,76,.04);border-left:2px solid var(--gold-dim);padding:.5rem .7rem;margin-bottom:.4rem;border-radius:0 2px 2px 0;position:relative;}
+.note-date input[type=date]{background:transparent;border:none;border-bottom:1px solid var(--muted);color:var(--muted);font-family:'DM Mono',monospace;font-size:.52rem;padding:0 2px;outline:none;margin-bottom:.3rem;}
+.note-text{font-size:.65rem;color:var(--text);line-height:1.6;width:100%;background:transparent;border:none;resize:none;font-family:'DM Mono',monospace;outline:none;min-height:40px;}
+.note-delete{position:absolute;top:.4rem;right:.5rem;background:none;border:none;color:var(--muted);cursor:pointer;font-size:.7rem;opacity:.5;}
+.no-notes{font-size:.6rem;color:var(--muted);font-style:italic;opacity:.6;}
+
+/* TECHNIQUES */
+.tech-tabs{display:flex;border:1px solid #2a2520;border-radius:3px;margin-bottom:1rem;overflow:hidden;}
+.tech-tab{flex:1;background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:8px;cursor:pointer;transition:all .2s;text-align:center;}
+.tech-tab.active{background:var(--gold-dim);color:var(--cream);}
+.fw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;}
+.fw-add-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold-dim);font-family:'DM Mono',monospace;font-size:.58rem;padding:5px 12px;cursor:pointer;border-radius:2px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--surface);border:1px solid var(--gold-dim);border-radius:3px;padding:1.5rem;width:100%;max-width:400px;}
+.modal-title{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.05rem;margin-bottom:1rem;font-style:italic;}
+.modal-field{margin-bottom:.8rem;}
+.modal-field label{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.3rem;}
+.modal-field input,.modal-field textarea{width:100%;background:rgba(201,168,76,.05);border:1px solid #2a2520;color:var(--text);font-family:'DM Mono',monospace;font-size:.68rem;padding:.4rem .6rem;border-radius:2px;outline:none;}
+.modal-field textarea{resize:vertical;min-height:55px;}
+.modal-actions{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem;}
+.modal-btn{background:none;border:1px solid var(--gold-dim);color:var(--gold-dim);font-family:'DM Mono',monospace;font-size:.58rem;padding:6px 14px;cursor:pointer;border-radius:2px;}
+.modal-btn.primary{background:var(--gold-dim);color:var(--cream);}
+</style>
+</head>
+<body>
+<h1>Ze Tableau</h1>
+<p class="subtitle">Cocktails & Sirops — Mariages aromatiques</p>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="setTab('ingredients')">Ingrédients</button>
+  <button class="nav-tab" onclick="setTab('spirits')">Alcools</button>
+  <button class="nav-tab" onclick="setTab('techniques')">Techniques</button>
+</div>
+
+<!-- INGREDIENTS -->
+<div class="section active" id="tab-ingredients">
+  <input class="search-box" type="text" placeholder="Rechercher un ingrédient..." oninput="filterIngredients(this.value)" id="ing-search">
+  <div id="ing-detail"></div>
+  <div id="ing-grid"></div>
+</div>
+
+<!-- SPIRITS -->
+<div class="section" id="tab-spirits">
+  <div id="spi-detail"></div>
+  <div id="spi-grid"></div>
+</div>
+
+<!-- TECHNIQUES -->
+<div class="section" id="tab-techniques">
+  <div class="tech-tabs">
+    <button class="tech-tab active" id="tt-mac" onclick="setTechTab('maceration')">Macération</button>
+    <button class="tech-tab" id="tt-fw" onclick="setTechTab('fatwash')">Fat Wash</button>
+  </div>
+  <div id="tech-mac">
+    <div id="mac-detail"></div>
+    <div id="mac-grid"></div>
+  </div>
+  <div id="tech-fw" style="display:none;">
+    <div class="fw-header">
+      <span style="font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;">Méthode congélateur</span>
+      <button class="fw-add-btn" onclick="openAddFW()">+ Ajouter</button>
+    </div>
+    <div id="fw-detail"></div>
+    <div id="fw-grid"></div>
+  </div>
+</div>
+
+<!-- COMBO DETAIL OVERLAY (full screen on mobile) -->
+<div class="modal-overlay" id="combo-overlay">
+  <div class="modal-box" style="max-width:500px;max-height:90vh;overflow-y:auto;">
+    <div class="detail-title" id="co-title"></div>
+    <div class="detail-type" id="co-type"></div>
+    <div class="detail-row"><div class="detail-label">Profil de goût</div><div class="detail-text" id="co-gout"></div></div>
+    <div class="detail-row"><div class="detail-label">Suggestion cocktail</div><div class="detail-text" id="co-cocktail"></div></div>
+    <div class="detail-note" id="co-auto"></div>
+    <div class="notes-section">
+      <div class="notes-header"><span class="notes-title">📋 Mes notes</span><button class="add-note-btn" onclick="addNoteFor('combo')">+ Note</button></div>
+      <div id="notes-list-combo"></div>
+    </div>
+    <button class="back-btn" onclick="closeCombo()">← Retour</button>
+  </div>
+</div>
+
+<!-- ADD FAT WASH MODAL -->
+<div class="modal-overlay" id="fw-modal">
+  <div class="modal-box">
+    <div class="modal-title">Ajouter un fat wash</div>
+    <div class="modal-field"><label>Nom</label><input type="text" id="fw-new-name" placeholder="Ex: Beurre de peanut"></div>
+    <div class="modal-field"><label>Profil de goût</label><textarea id="fw-new-profile" placeholder="Ex: Noisette, gras, légèrement sucré..."></textarea></div>
+    <div class="modal-field"><label>Alcools (séparés par virgule)</label><input type="text" id="fw-new-spirits" placeholder="Ex: Bourbon, Vodka"></div>
+    <div class="modal-field"><label>Méthode (optionnel)</label><textarea id="fw-new-method" placeholder="Ex: 2 c. à soupe par 200ml..."></textarea></div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeAddFW()">Annuler</button>
+      <button class="modal-btn primary" onclick="saveCustomFW()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ingredients=[
+  {id:'banane',cat:'fruits',label:'Banane',profile:'doux, crémeux, tropical'},
+  {id:'mangue',cat:'fruits',label:'Mangue',profile:'charnu, acide-sucré, solaire'},
+  {id:'ananas',cat:'fruits',label:'Ananas',profile:'acide vif, juteux, tropical'},
+  {id:'fraise',cat:'fruits',label:'Fraise',profile:'fruité franc, légèrement acide'},
+  {id:'peche',cat:'fruits',label:'Pêche',profile:'délicat, floral-sucré, estival'},
+  {id:'poire',cat:'fruits',label:'Poire',profile:'doux, floral, légèrement acide'},
+  {id:'pamplemousse',cat:'fruits',label:'Pampl.',profile:'amer, acide, vif'},
+  {id:'citron',cat:'fruits',label:'Citron',profile:'acide vif, zesté, équilibriste'},
+  {id:'orange',cat:'fruits',label:'Orange',profile:'rond, légèrement amer, chaleureux'},
+  {id:'cerise',cat:'fruits',label:'Cerise',profile:'riche, acide-sucré, profond'},
+  {id:'framb',cat:'fruits',label:'Framboise',profile:'vif, fruité, légèrement amer'},
+  {id:'concombre',cat:'fruits',label:'Concombre',profile:'frais, aqueux, neutre'},
+  {id:'gingembre',cat:'epices',label:'Gingembre',profile:'piquant, chaud, frais en retard'},
+  {id:'cannelle',cat:'epices',label:'Cannelle',profile:'chaud, doux-épicé, nostalgique'},
+  {id:'cardamome',cat:'epices',label:'Cardamome',profile:'floral, camphrée, complexe'},
+  {id:'jalapeno',cat:'epices',label:'Jalapeño',profile:'piquant direct, végétal, chaleur franche'},
+  {id:'poivre',cat:'epices',label:'Poivre noir',profile:'piquant sec, élégant, long'},
+  {id:'espelette',cat:'epices',label:'Piment',profile:'chaleur fruitée, doux-piquant'},
+  {id:'vanille',cat:'epices',label:'Vanille',profile:'doux, crémeux, liant universel'},
+  {id:'anis',cat:'epices',label:'Anis étoilé',profile:'anisé, légèrement sucré, traversant'},
+  {id:'clou',cat:'epices',label:'Clou girofle',profile:'intense, chaud, automnal'},
+  {id:'cumin',cat:'epices',label:'Cumin',profile:'terreux, chaud, épicé-fumé'},
+  {id:'menthe',cat:'herbes',label:'Menthe',profile:'frais, direct, légèrement sucré'},
+  {id:'basilic',cat:'herbes',label:'Basilic',profile:'herbacé, anisé, poivré en fin'},
+  {id:'romarin',cat:'herbes',label:'Romarin',profile:'résineux, boisé, méditerranéen'},
+  {id:'thym',cat:'herbes',label:'Thym',profile:'herbacé-boisé, subtil, provençal'},
+  {id:'sauge',cat:'herbes',label:'Sauge',profile:'camphrée, amer doux, rustique'},
+  {id:'estragon',cat:'herbes',label:'Estragon',profile:'anisé, élégant, discret'},
+  {id:'coriandre',cat:'herbes',label:'Coriandre',profile:'citronné, vert vif, diviseur'},
+  {id:'verveine',cat:'herbes',label:'Verveine',profile:'citronné, délicat, apaisant'},
+  {id:'cafe',cat:'umami',label:'Café',profile:'amer, torréfié, complexe'},
+  {id:'miso',cat:'umami',label:'Miso',profile:'umami profond, salé, fermenté'},
+  {id:'bacon',cat:'umami',label:'Bacon',profile:'gras, fumé, salé, persistent'},
+  {id:'soya',cat:'umami',label:'Sauce soya',profile:'salé, umami, amplificateur'},
+  {id:'champignon',cat:'umami',label:'Champignon',profile:'terreux, umami, sous-bois'},
+  {id:'sel_fume',cat:'umami',label:'Sel fumé',profile:'fumé, amplificateur, ombre'},
+  {id:'caramel',cat:'umami',label:'Caramel',profile:'doux-amer, riche, dangereux'},
+  {id:'miel',cat:'umami',label:'Miel',profile:'floral, complexe, adoucissant'},
+  {id:'lavande',cat:'floral',label:'Lavande',profile:'floral délicat, provençal, vacances'},
+  {id:'rose',cat:'floral',label:'Rose',profile:'romantique, doux, persistant'},
+  {id:'sureau',cat:'floral',label:'Sureau',profile:'muscat, floral frais, nordique'},
+  {id:'jasmin',cat:'floral',label:'Jasmin',profile:'floral intense, légèrement sucré'},
+  {id:'hibiscus',cat:'floral',label:'Hibiscus',profile:'acide, floral-fruité, rouge carmin'},
+  {id:'violette',cat:'floral',label:'Violette',profile:'doux, floral discret, délicat'},
+  {id:'the_noir',cat:'boise',label:'Thé noir',profile:'tannique, amer doux, structurant'},
+  {id:'whisky_ing',cat:'boise',label:'Chêne/Whisky',profile:'fumé, boisé, douceur de barrique'},
+  {id:'betterave',cat:'boise',label:'Betterave',profile:'terreux, légèrement sucré, coloré'},
+  {id:'carotte',cat:'boise',label:'Carotte',profile:'doux, terreux, richesse naturelle'},
+  {id:'sesame',cat:'boise',label:'Sésame',profile:'noisette, umami, grillé'},
+  {id:'noix',cat:'boise',label:'Noix',profile:'gras, tannique, amertume douce'},
+];
+const spirits=[
+  {id:'rhum_blanc',label:'Rhum Blanc',color:'#ddd8c0',
+   desc:"Propre, légèrement sucré avec une pointe végétale de canne. Sa neutralité est sa force — il ne cherche pas à dominer, il met en valeur. La toile parfaite pour tester tes syrops fruités et tes herbes fraîches.",
+   compatible:['citron','menthe','ananas','banane','mangue','framb','fraise','gingembre','coriandre','hibiscus','sureau','concombre','vanille']},
+  {id:'rhum_brun',label:'Rhum Brun',color:'#b87840',
+   desc:"Profond, vanillé, avec des notes de mélasse et de bois toasté. Il a du caractère — il aime les saveurs riches et les épices chaudes qui lui donnent la réplique. Ton sirop de banane-cannelle trouve sa mesure ici.",
+   compatible:['banane','vanille','cannelle','caramel','miel','noix','cafe','sel_fume','gingembre','clou','cardamome','ananas','peche','orange']},
+  {id:'gin',label:'Gin',color:'#a0c8b0',
+   desc:"Botanique et résineux. Le genévrier mène, mais les botaniques secondaires font tout le travail. Il appelle les agrumes vifs, les fleurs délicates, les herbes aromatiques — et récompense les syrops bien pensés.",
+   compatible:['citron','pamplemousse','concombre','menthe','romarin','lavande','sureau','rose','fraise','framb','thym','basilic','cardamome','poivre','hibiscus','violette','verveine']},
+  {id:'vodka',label:'Vodka',color:'#d0e0ea',
+   desc:"Une ardoise blanche — elle ne goûte rien, et c'est exactement ce qu'on lui demande. Elle laisse le sirop prendre toute la scène. L'alcool idéal pour tester de nouvelles créations sans interférence.",
+   compatible:['citron','framb','fraise','peche','concombre','gingembre','menthe','lavande','hibiscus','rose','cafe','miso','soya','ananas','mangue','vanille','poire','betterave']},
+  {id:'tequila',label:'Tequila',color:'#cce080',
+   desc:"Terreuse, végétale, avec une douceur d'agave en fond. Elle tient tête aux saveurs fortes sans les écraser — elle les amplifie. Une Margarita à ton sirop de jalapeño-ananas, c'est ici.",
+   compatible:['citron','pamplemousse','orange','jalapeno','espelette','coriandre','sel_fume','hibiscus','ananas','mangue','framb','fraise','gingembre','poivre','menthe','concombre']},
+  {id:'mezcal',label:'Mezcal',color:'#c0a060',
+   desc:"Fumé, complexe, avec une texture presque charnelle. Le mezcal est pour les cocktails courageux. Il transforme un sirop ordinaire en quelque chose de sombre et mémorable.",
+   compatible:['pamplemousse','orange','jalapeno','espelette','cafe','miso','sel_fume','betterave','carotte','cumin','poivre','ananas','coriandre','miel','thym']},
+  {id:'bourbon',label:'Bourbon',color:'#d08030',
+   desc:"Chaud, doux-amer, avec du caramel, de la vanille et un fond de chêne toasté. Généreux — il donne autant qu'il prend. Ton Caramel Sour, ton Old Fashioned signature — c'est son territoire.",
+   compatible:['cerise','peche','orange','caramel','vanille','sel_fume','miel','cannelle','cafe','noix','gingembre','miso','cardamome','the_noir','poivre']},
+  {id:'cognac',label:'Cognac',color:'#e0a030',
+   desc:"Élégant, fruité et floral avec une complexité de vieillissement. Il préfère les accords délicats aux chocs frontaux — chaque cocktail qui l'utilise devient une déclaration d'intention.",
+   compatible:['orange','cerise','peche','poire','framb','vanille','miel','cannelle','cardamome','rose','jasmin','caramel','noix','the_noir','cafe']},
+  {id:'champagne',label:'Champagne',color:'#e8e080',
+   desc:"Vif, minéral, avec une acidité fine et des bulles qui portent les arômes. Il demande de la légèreté — les syrops lourds l'écrasent, les syrops délicats le subliment.",
+   compatible:['framb','fraise','peche','poire','sureau','rose','violette','lavande','hibiscus','citron','pamplemousse','gingembre','verveine','jasmin']},
+  {id:'sake',label:'Saké',color:'#e0d8c8',
+   desc:"Umami, légèrement sucré, avec une texture soyeuse unique. Il accepte les accords qui feraient sourciller avec d'autres bases — miso, sésame, soya. L'alcool de chef pour cocktails signature.",
+   compatible:['citron','gingembre','concombre','miso','soya','sesame','jasmin','the_noir','rose','fraise','menthe','cardamome','miel','betterave']},
+  {id:'whisky_sc',label:'Whisky',color:'#c07028',
+   desc:"Tourbé ou fruité, boisé ou floral selon l'origine. Ce qui est constant : il aime les accords qui ont de la profondeur. Un sirop bien construit en sort amplifié.",
+   compatible:['cerise','peche','miel','caramel','vanille','noix','cafe','sel_fume','gingembre','cannelle','orange','the_noir','cardamome','poivre']},
+];
+const pairings={
+  banane:{harmony:['mangue','ananas','vanille','cannelle','caramel','miel','noix','poire','peche'],contrast:['miso','jalapeno','bacon','cafe','cardamome','sel_fume','soya'],note:"La banane est douce, crémeuse, presque veloutée. En harmonie avec les tropicaux et la vanille, elle construit des cocktails généreux. Poussée face au miso, au jalapeño ou au café — le sucré devient contrepoint, et c'est là que la magie opère."},
+  mangue:{harmony:['banane','ananas','peche','framb','gingembre','cardamome','espelette'],contrast:['menthe','basilic','miso','sel_fume','poivre','coriandre'],note:"La mangue est solaire, charnue, avec une acidité qui la sauve du sucré banal. Les épices chaudes en harmonie, les herbes fraîches en contraste — un cocktail Mango Sour avec coriandre vaut le test."},
+  ananas:{harmony:['mangue','banane','gingembre','jalapeno','coriandre','menthe','citron'],contrast:['romarin','bacon','soya','sel_fume','cafe','miso'],note:"L'ananas est acide, juteux, avec une douceur qui arrive en retard. Face au bacon ou au café, il devient un cocktail de brunch audacieux qu'on n'oublie pas."},
+  fraise:{harmony:['basilic','rose','menthe','framb','citron','vanille','hibiscus'],contrast:['poivre','estragon','cafe','romarin'],note:"La fraise est franche, généreuse. Avec le basilic ou la rose, elle flirte avec la gastronomie. Avec le poivre ou l'estragon, le cocktail change de peau — il devient adulte, complexe."},
+  peche:{harmony:['vanille','lavande','gingembre','menthe','framb','cerise','thym'],contrast:['romarin','the_noir','miso','sel_fume','poivre'],note:"La pêche a le parfum d'un moment d'été parfait. En harmonie avec la lavande — presque sensuel. En contraste avec le romarin ou le thé noir, elle gagne une épine dorsale."},
+  poire:{harmony:['banane','gingembre','cardamome','cannelle','vanille','noix','the_noir'],contrast:['romarin','poivre','miso','sel_fume','cafe'],note:"La poire est discrète mais pas timide. Avec les épices douces, elle construit quelque chose de chaleureux. Avec le romarin ou le poivre — un cocktail automnal qui goûte les forêts."},
+  pamplemousse:{harmony:['citron','orange','romarin','menthe','gingembre','hibiscus','rose'],contrast:['miel','vanille','miso','sel_fume','cafe'],note:"Le pamplemousse est amer, acide, et il ne s'en excuse pas. Avec le miel ou la vanille, il se laisse apprivoiser — mais garde son caractère."},
+  citron:{harmony:['pamplemousse','orange','menthe','gingembre','verveine','thym','lavande'],contrast:['vanille','miel','basilic','cafe','soya'],note:"Le citron relève tout ce qu'il touche. En contraste avec la vanille ou le miel — cette tension doux-acide qui fait saliver avant même de boire."},
+  orange:{harmony:['citron','cannelle','cardamome','clou','cafe','hibiscus','gingembre'],contrast:['romarin','miso','poivre','betterave','noix'],note:"L'orange est ronde, chaleureuse. Avec les épices de Noël, elle réchauffe. Avec la betterave ou le romarin, elle devient plus sombre et plus intéressante."},
+  cerise:{harmony:['vanille','cannelle','clou','rose','hibiscus','the_noir','whisky_ing'],contrast:['cafe','poivre','miso','thym','sel_fume'],note:"La cerise est riche, avec une profondeur qui rappelle le vin. En harmonie avec le chêne — Manhattan territory. En contraste avec le café ou le poivre — cocktail signature de bar sérieux."},
+  framb:{harmony:['fraise','rose','hibiscus','citron','menthe','violette','basilic'],contrast:['poivre','cafe','thym','romarin','miso'],note:"La framboise est vive, avec une légère amertume qui la sauve du sirop banal. Contrastée par le poivre ou le thym, elle devient un Sour qui mérite sa propre ardoise."},
+  concombre:{harmony:['menthe','citron','gingembre','verveine','sel_fume'],contrast:['jalapeno','miso','soya','cafe'],note:"Le concombre est frais, aqueux. En harmonie — roi de l'apéro d'été. En contraste avec le jalapeño ou le miso, il devient le fond neutre qui laisse parler l'audace."},
+  gingembre:{harmony:['citron','ananas','mangue','menthe','cardamome','miel','poire'],contrast:['vanille','rose','lavande','cafe','whisky_ing'],note:"Piquant, chaleureux, avec une fraîcheur paradoxale. Contrasté par la rose ou la lavande — épicé-floral, Orient Express en verre."},
+  cannelle:{harmony:['vanille','poire','orange','clou','cardamome','miel','noix'],contrast:['citron','hibiscus','menthe','cafe'],note:"La madeleine de Proust des épices. Contrastée par l'hibiscus ou le citron, elle trouve une légèreté inattendue."},
+  cardamome:{harmony:['cafe','orange','miel','gingembre','cannelle','rose','poire'],contrast:['menthe','citron','concombre','ananas','hibiscus'],note:"L'épice la plus complexe de la roue — florale, camphrée. Elle transforme un simple sirop en voyage. En contraste avec les notes fraîches, un cocktail d'été qui a de la mémoire."},
+  jalapeno:{harmony:['ananas','mangue','citron','coriandre','sel_fume','orange','fraise'],contrast:['vanille','miel','lavande','rose','caramel'],note:"Le jalapeño ne demande pas la permission. En contraste avec la vanille ou le miel — doux-piquant — une tension qui rend chaque gorgée addictive."},
+  poivre:{harmony:['citron','cerise','framb','fraise','cafe','soya','sel_fume'],contrast:['vanille','lavande','miel','poire','sureau'],note:"Le poivre noir est sous-estimé en cocktail. Sa chaleur est sèche, élégante. Contrasté par la lavande ou le sureau — floral-épicé qui fait dire : qu'est-ce que c'est?"},
+  espelette:{harmony:['mangue','citron','orange','sel_fume','coriandre','ananas'],contrast:['vanille','miel','lavande','hibiscus'],note:"Chaleur fruitée, pas brutale. En contraste avec la vanille ou le miel — doux-pimenté comme dans les meilleures paletas mexicaines."},
+  vanille:{harmony:['banane','peche','caramel','miel','cannelle','noix','cafe','whisky_ing'],contrast:['citron','pamplemousse','hibiscus','menthe','gingembre'],note:"Le liant universel — douce, crémeuse. Face au citron ou à l'hibiscus — cette tension acide-doux, c'est la crème brûlée en version cocktail."},
+  anis:{harmony:['citron','menthe','pamplemousse','verveine','fraise'],contrast:['cafe','miso','bacon','betterave','noix'],note:"Une étoile filante en cocktail — traverse tout le palais. Contrasté par le café ou la betterave, un accord sombre qui évoque les bars d'après-minuit."},
+  clou:{harmony:['orange','cannelle','cardamome','cerise','miel','whisky_ing','vanille'],contrast:['citron','hibiscus','concombre','menthe'],note:"Intense — une seule goutte et vous sentez l'automne. Contrasté par la menthe ou le concombre, un cocktail hivernal-estival qui désoriente agréablement."},
+  cumin:{harmony:['citron','coriandre','carotte','betterave','orange','sel_fume'],contrast:['rose','lavande','menthe','fraise','hibiscus'],note:"Terreux, chaud. En contraste avec les fleurs — Orient-Occident fascinant."},
+  menthe:{harmony:['citron','concombre','fraise','framb','ananas','verveine','gingembre'],contrast:['cafe','whisky_ing','miso','bacon','noix'],note:"Fraîche, directe. Contrastée par le café ou le whisky — tension chaud-froid la plus immédiate qui soit."},
+  basilic:{harmony:['fraise','citron','pamplemousse','concombre','menthe'],contrast:['cannelle','cafe','miso','caramel','vanille'],note:"Herbacé, légèrement anisé. En harmonie avec les fraises ou les agrumes — cocktails d'été italiens. En contraste avec la cannelle ou le caramel — twist qu'on ne voit pas venir."},
+  romarin:{harmony:['citron','pamplemousse','peche','thym','miel','the_noir'],contrast:['fraise','mangue','banane','hibiscus','rose'],note:"Résineux, boisé. Utilisé avec mesure, profondeur méditerranéenne. En contraste avec les tropicaux ou les fleurs — quelque chose de sauvage dans un verre trop sage."},
+  thym:{harmony:['citron','peche','miel','romarin','champignon','the_noir'],contrast:['fraise','framb','rose','hibiscus','vanille'],note:"Herbacé-boisé, subtil. Contrasté par les fruits rouges ou les fleurs — printanier-rustique, collines provençales au coucher du soleil."},
+  sauge:{harmony:['citron','poire','miel','thym','noix','the_noir'],contrast:['fraise','mangue','hibiscus','rose','vanille'],note:"Camphrée, légèrement amère. En contraste avec les tropicaux ou les fleurs — tension rustique-exotique du chef autodidacte."},
+  estragon:{harmony:['citron','pamplemousse','fraise','concombre','verveine'],contrast:['cafe','miso','bacon','cannelle','clou'],note:"Anisé, élégant. L'herbe oubliée du bar. En contraste avec le café ou le miso — accord herbacé-umami à faire découvrir."},
+  coriandre:{harmony:['citron','jalapeno','mangue','gingembre','concombre'],contrast:['vanille','rose','lavande','cafe','miel'],note:"Elle divise — et c'est ce qui la rend intéressante. En contraste avec la lavande ou la rose — vert-floral qui réconcilie même les sceptiques."},
+  verveine:{harmony:['citron','menthe','gingembre','pamplemousse','peche'],contrast:['cafe','miso','bacon','noix','whisky_ing'],note:"Citronnée, délicate. Contrastée par le café ou le whisky — floral-corsé étonnamment élégant, tisane transformée en boisson de soirée."},
+  cafe:{harmony:['cardamome','orange','vanille','whisky_ing','caramel','miel','noix','cannelle'],contrast:['menthe','citron','fraise','hibiscus','lavande'],note:"Amer, torréfié, complexe. Contrasté par la menthe ou l'hibiscus — amer-frais ou amer-floral d'une élégance surprenante."},
+  miso:{harmony:['soya','sesame','gingembre','champignon','sel_fume','betterave'],contrast:['fraise','pamplemousse','lavande','rose','hibiscus'],note:"Le secret le mieux gardé du bar — umami profond, fermenté. En contraste avec les fleurs ou les fruits rouges — l'accord umami-fruité est une révélation."},
+  bacon:{harmony:['sel_fume','cafe','miso','champignon','whisky_ing'],contrast:['fraise','rose','hibiscus','lavande','menthe'],note:"L'arme secrète du fat wash — gras, fumé, salé. En contraste avec les fleurs ou les petits fruits — accord qui devrait être bizarre mais fonctionne."},
+  soya:{harmony:['miso','sesame','gingembre','champignon','citron'],contrast:['fraise','rose','lavande','vanille','menthe'],note:"Salée, umami, amplificatrice. En contraste avec les fruits sucrés ou les fleurs — sucré-salé qui fait saliver."},
+  champignon:{harmony:['thym','romarin','miso','soya','sel_fume','the_noir'],contrast:['citron','framb','rose','hibiscus','menthe'],note:"Terreux, umami, texture qui reste. En contraste avec les agrumes ou les fleurs — tension terre-lumière, expérience aromatique à part entière."},
+  sel_fume:{harmony:['caramel','cafe','miso','bacon','whisky_ing','betterave'],contrast:['fraise','rose','lavande','hibiscus','menthe'],note:"Un amplificateur — il fait tout chanter. En contraste avec les fleurs ou les petits fruits — ajoute une ombre à un cocktail trop lumineux."},
+  caramel:{harmony:['vanille','sel_fume','cafe','whisky_ing','noix','cannelle','banane'],contrast:['citron','pamplemousse','framb','menthe','hibiscus'],note:"Dangereux — trop facile à aimer. Contrasté par le citron ou la framboise — l'acidité contre le sucré dans le Sour parfait."},
+  miel:{harmony:['lavande','thym','romarin','gingembre','citron','vanille','cardamome'],contrast:['cafe','miso','poivre','jalapeno','bacon'],note:"Floral, complexe selon la fleur. En contraste avec le jalapeño ou le café — doux-piquant ou doux-amer, c'est autre chose."},
+  lavande:{harmony:['citron','miel','peche','fraise','rose','violette'],contrast:['cafe','bacon','miso','romarin','gingembre'],note:"Délicate, florale. Contrastée par le café ou le bacon — floral-corsé qu'on pourrait servir au brunch d'un chef étoilé."},
+  rose:{harmony:['fraise','framb','peche','violette','lavande','vanille'],contrast:['cafe','miso','romarin','gingembre','poivre'],note:"L'ingrédient le plus romantique de la roue. En contraste avec le gingembre ou le poivre — prend du caractère sans perdre l'élégance."},
+  sureau:{harmony:['citron','pamplemousse','fraise','menthe','violette','rose'],contrast:['cafe','romarin','miso','gingembre','poivre'],note:"Floral, légèrement muscat, étés scandinaves. Contrasté par le café ou le romarin — profondeur inattendue."},
+  jasmin:{harmony:['citron','peche','poire','the_noir','miel','rose'],contrast:['cafe','miso','gingembre','romarin','whisky_ing'],note:"Persistant et floral. En contraste avec le café ou le whisky — floral-torréfié entre cocktail bar et salon de thé."},
+  hibiscus:{harmony:['citron','framb','fraise','rose','orange','gingembre','menthe'],contrast:['vanille','caramel','miso','romarin','noix'],note:"La vedette visuelle de la roue — rouge carmin. Contrasté par la vanille ou le caramel — l'acidité se laisse apprivoiser."},
+  violette:{harmony:['rose','lavande','framb','fraise','citron','sureau'],contrast:['cafe','miso','romarin','gingembre','sel_fume'],note:"Discrète mais souveraine. Contrastée par le café ou le sel fumé — floral-profond étonnant."},
+  the_noir:{harmony:['citron','peche','miel','jasmin','cannelle','cardamome','whisky_ing'],contrast:['ananas','mangue','jalapeno','bacon','soya'],note:"Tannique, structurant. En contraste avec l'ananas ou le jalapeño — ancre le tropical dans quelque chose de sérieux."},
+  whisky_ing:{harmony:['caramel','miel','vanille','cafe','cerise','noix','sel_fume'],contrast:['citron','menthe','hibiscus','lavande','fraise'],note:"Fumé, boisé, douceur de barrique. En contraste avec la menthe ou les fleurs — Mint Julep ou Whisky Sour, les classiques ont toujours raison."},
+  betterave:{harmony:['orange','cumin','miso','sel_fume','citron','carotte'],contrast:['fraise','rose','lavande','vanille','hibiscus'],note:"Terreuse, légèrement sucrée. En contraste avec les fleurs ou les fruits rouges — terre-lumière aussi visuel que gustatif."},
+  carotte:{harmony:['gingembre','citron','cumin','miel','orange','betterave'],contrast:['lavande','rose','cafe','whisky_ing','noix'],note:"Douce, terreuse. Contrastée par la lavande ou la rose — jardinage-floral qui mérite sa place sur une ardoise."},
+  sesame:{harmony:['soya','miso','miel','citron','gingembre','noix'],contrast:['fraise','rose','lavande','hibiscus','menthe'],note:"Noisette umami. En contraste avec les fleurs ou les fruits rouges — accord noisette-fruité de type dessert japonais."},
+  noix:{harmony:['vanille','caramel','cafe','whisky_ing','miel','cannelle','poire'],contrast:['citron','framb','hibiscus','menthe','lavande'],note:"Grasse, légèrement tannique. Contrastée par le citron ou les petits fruits — trouve une légèreté qu'on ne lui soupçonnait pas."},
+};
+const curatedCombos={
+  'banane+miso':{goût:"La douceur crémeuse de la banane rencontre la profondeur umami du miso — salé, fermenté, presque caramel. Le sucré devient contrepoint. Déstabilisant de façon addictive.",cocktail:"Old Fashioned Banane-Miso : bourbon, sirop banane-miso, dash Angostura, zeste orange. Garnir d'un chip de banane séchée."},
+  'banane+jalapeno':{goût:"Doux-piquant tropical — la chaleur arrive après la douceur, en retard, comme une surprise bien calculée. La banane adoucit le jalapeño, le jalapeño réveille la banane.",cocktail:"Margarita Banane-Jalapeño : tequila blanco, sirop banane-jalapeño, lime fraîche, sel fumé sur le bord."},
+  'banane+bacon':{goût:"Le fat wash est ici obligatoire. Le bacon infuse ses notes grasses-fumées — c'est gras, sucré, fumé, et terriblement convaincant. Profil breakfast cocktail assumé.",cocktail:"Fat Wash Banana : fat wash bacon dans rhum brun 48h au congélateur, sirop banane, dash Angostura."},
+  'banane+cafe':{goût:"L'amer torréfié contre la douceur veloutée — ils s'annulent pour révéler quelque chose de riche qui goûte le dessert sans la lourdeur.",cocktail:"Espresso Martini Tropical : vodka, espresso double, sirop banane, Kahlúa. Secouer fort pour la mousse."},
+  'banane+cardamome':{goût:"Floral, épicé, crémeux. La cardamome amène ses notes orientales, la banane les adoucit en base veloutée. Évoque un chai latte tropical.",cocktail:"Gin Fizz Banane-Cardamome : gin botanique, sirop banane-cardamome, citron, eau gazeuse."},
+  'banane+sel_fume':{goût:"Le sel amplifie le sucre de la banane — soudainement elle goûte plus banane que nature. Le fumé ajoute une ombre, une profondeur.",cocktail:"Daiquiri Banane Salé : rhum blanc, lime, sirop banane, pincée sel fumé. Le classique sublimé par un seul ingrédient."},
+  'banane+vanille':{goût:"Doux, crémeux, réconfortant — profil dessert assumé. Ils partagent les mêmes molécules aromatiques : harmonie presque trop parfaite. Alcool sec obligatoire.",cocktail:"Banana Cream : rhum vieux, sirop banane-vanille, crème légère, noix de muscade. Dans une coupe."},
+  'banane+cannelle':{goût:"Chaleureux, épicé-doux, nostalgie des bananes flambées. La cannelle empêche la banane de devenir trop sage.",cocktail:"Hot Toddy Banane-Cannelle : rhum brun, eau chaude, sirop banane-cannelle, citron, bâton de cannelle."},
+  'banane+caramel':{goût:"Riche, très doux — Bananes Foster en verre. Sans acidité pour contrebalancer, ça devient vite lourd. Lime obligatoire.",cocktail:"Toffee Banana Sour : bourbon, sirop banane-caramel, citron généreux, blanc d'œuf. Secouer à sec puis avec glace."},
+  'banane+miel':{goût:"Floral-sucré, enveloppant. Le miel apporte une complexité florale que le sucre blanc ne peut pas offrir. Alcool sec + acide vif obligatoires.",cocktail:"Bee's Knees Tropical : gin sec, citron, sirop miel-banane. Trois ingrédients, aucun compromis."},
+  'romarin+banane':{goût:"Rustique contre tropical — le romarin résineux apporte une tension inattendue. Vacances méditerranéennes avec escale aux Caraïbes.",cocktail:"Gin & Tonic Signature : gin botanique, tonic premium, sirop banane, brin de romarin, concombre."},
+  'romarin+citron':{goût:"Herbacé-acide, frais et propre — un des accords les plus fiables du bar. Le romarin structure, le citron vivifie.",cocktail:"Spritz Romarin-Citron : Aperol, Prosecco, sirop romarin-citron, quartier de citron."},
+  'romarin+peche':{goût:"Fruité-boisé, légèrement résineux. La pêche délicate gagne de la structure. Profil Provence.",cocktail:"Pêche Sour Provençal : bourbon ou gin, citron, sirop pêche-romarin, blanc d'œuf. Brin de romarin grillé."},
+  'cafe+cardamome':{goût:"Le classique arabe transposé — amer-épicé-floral. La cardamome ouvre le café, lui donne une dimension florale.",cocktail:"Espresso Martini Arabe : vodka, espresso, sirop cardamome, huile d'olive en finition."},
+  'cafe+menthe':{goût:"Amer-frais — tension chaud-froid la plus nette qui soit. Le café apporte la profondeur, la menthe la tranche.",cocktail:"Cold Brew Mojito : rhum blanc, cold brew concentré, sirop menthe, lime, eau gazeuse."},
+  'lavande+citron':{goût:"Floral-acide, élégant, léger. La lavande domine si trop présente — le citron la maintient honnête.",cocktail:"Tom Collins Lavande : gin, citron, sirop lavande, eau gazeuse. Tige de lavande."},
+  'hibiscus+citron':{goût:"Acide intense, floral-fruité. Couleur rouge carmin qui fait le spectacle avant même la première gorgée.",cocktail:"Hibiscus Margarita : tequila, sirop hibiscus, citron vert. Rouge comme un coucher de soleil."},
+  'caramel+sel_fume':{goût:"Caramel beurre salé en verre — doux, amer, fumé. La longueur en bouche oblige à reprendre une gorgée pour vérifier. La réponse est oui.",cocktail:"Caramel Sour : bourbon, sirop caramel-sel fumé, citron généreux, blanc d'œuf. Mousse épaisse, fleur de sel."},
+  'vanille+citron':{goût:"Doux-acide en équilibre parfait — crème brûlée au citron en version liquide. La vanille adoucit, le citron empêche la vanille de s'endormir.",cocktail:"Vanilla Sour : pisco ou gin, sirop vanille, citron, blanc d'œuf, zeste."},
+  'ananas+jalapeno':{goût:"Acide-piquant-tropical — la chaleur arrive après l'acidité, en vague. L'ananas amortit le jalapeño, le jalapeño donne à l'ananas une raison d'exister.",cocktail:"Tommy's Margarita Feu-Tropical : tequila blanco, sirop ananas-jalapeño, lime. La Margarita qui brûle bien."},
+  'whisky_ing+caramel':{goût:"Riche, boisé-sucré, longueur en bouche caractéristique des grands cocktails. Le caramel amplifie les notes de barrique.",cocktail:"Old Fashioned Premium : bourbon, sirop caramel maison, Angostura, zeste orange. Sur glace claire."},
+  'the_noir+peche':{goût:"Tannique-fruité. L'astringence du thé structure la douceur de la pêche. Thé glacé adulte — rafraîchissant mais sérieux.",cocktail:"Arnold Palmer Cocktail : bourbon ou gin, thé noir froid concentré, sirop pêche, citron."},
+  'miso+champignon':{goût:"Umami double — profond, terreux, persistant. Pas pour tout le monde, mais ceux qui comprennent ne commandent plus rien d'autre.",cocktail:"Savory Martini : vodka ou saké, sirop miso-champignon, dash sauce soya, zeste citron."},
+  'gingembre+citron':{goût:"Piquant-acide, vif, digestif — un des accords les plus fiables du bar. Nettoie le palais et réveille.",cocktail:"Moscow Mule : vodka, sirop gingembre, citron vert, ginger beer. Dans un verre en cuivre."},
+  'rose+framb':{goût:"Floral-fruité délicat — la rose donne de la hauteur, la framboise ancre dans le réel. Profil pâtisserie française.",cocktail:"Kir Royal Revisité : Champagne, sirop framboise-rose. Pétale de rose séché."},
+  'poivre+cerise':{goût:"Fruité-piquant, chaleur sèche du poivre qui amplifie l'acidité de la cerise. Manhattan signature territory.",cocktail:"Manhattan Signature : rye whisky, vermouth doux, sirop cerise-poivre, Angostura."},
+  'romarin+miel':{goût:"Floral-boisé, doux et aromatique. Le miel adoucit le romarin, le romarin donne de la longueur au miel.",cocktail:"Bee's Knees Provençal : gin, citron, sirop miel-romarin."},
+  'menthe+citron':{goût:"Frais, vif, propre. L'accord Mojito fondamental — simple, infaillible, classique pour une raison.",cocktail:"Mojito ou Southside. La base absolue. Rhum blanc, citron vert, sirop menthe, eau gazeuse."},
+  'pamplemousse+romarin':{goût:"Amer-résineux, apéro sophistiqué. Le romarin structure l'amertume du pamplemousse.",cocktail:"Paloma Craft : tequila reposado, pamplemousse frais, sirop romarin, sel rose."},
+};
+const macerations=[
+  {id:'mac_lavande',name:'Lavande',cat:'Floral',profile:'Floral délicat, légèrement camphrée, provençal',spirits:['Gin','Vodka','Champagne'],method:'À froid — couvrir et laisser au frigo. Ne pas chauffer, la lavande devient savonneuse.',time:'12 à 24h. Goûter toutes les 6h — elle amère vite.'},
+  {id:'mac_rose',name:'Rose (pétales)',cat:'Floral',profile:'Doux, romantique, légèrement sucré',spirits:['Gin','Vodka','Champagne'],method:'À froid. Utiliser des pétales frais ou séchés non traités.',time:'24 à 48h à froid.'},
+  {id:'mac_hibiscus',name:'Hibiscus',cat:'Floral',profile:'Acide, fruité-floral, couleur rouge carmin spectaculaire',spirits:['Rhum Blanc','Tequila','Vodka','Gin'],method:'À froid ou légèrement chauffé (60°C max). Donne une couleur magnifique.',time:'2 à 6h suffit — très puissant.'},
+  {id:'mac_sureau',name:'Sureau (fleurs)',cat:'Floral',profile:'Muscat, floral frais, nordique',spirits:['Gin','Vodka','Champagne'],method:'À froid obligatoirement. Fleurs fraîches de saison ou séchées.',time:'24 à 48h.'},
+  {id:'mac_vanille',name:'Vanille',cat:'Épices',profile:'Doux, crémeux, liant universel',spirits:['Rhum Brun','Bourbon','Vodka','Cognac'],method:'Fendre les gousses en deux pour libérer les graines. À froid ou chaleur douce.',time:'5 à 14 jours à froid. 2 à 4h à 50°C.'},
+  {id:'mac_cannelle',name:'Cannelle',cat:'Épices',profile:'Chaud, doux-épicé, nostalgique',spirits:['Rhum Brun','Bourbon','Whisky','Vodka'],method:'Bâtons entiers. À froid uniquement — la poudre trouble et amère.',time:'24 à 72h. Goûter souvent.'},
+  {id:'mac_cardamome',name:'Cardamome',cat:'Épices',profile:'Floral, camphrée, complexe — l\'épice la plus polyvalente du bar',spirits:['Gin','Vodka','Bourbon','Rhum Brun'],method:'Écraser légèrement les gousses. À froid.',time:'12 à 24h.'},
+  {id:'mac_gingembre',name:'Gingembre',cat:'Épices',profile:'Piquant, chaud, frais en retard',spirits:['Vodka','Rhum Blanc','Gin','Tequila'],method:'Tranches fines. Plus les tranches sont fines, plus c\'est rapide.',time:'6 à 24h selon intensité désirée.'},
+  {id:'mac_piment',name:'Jalapeño / Piment',cat:'Épices',profile:'Chaleur directe, végétal, piquant contrôlable',spirits:['Tequila','Mezcal','Vodka','Rhum Blanc'],method:'Tranches sans graines = chaleur modérée. Avec graines = brûlant. Surveiller toutes les heures.',time:'1 à 4h maximum.'},
+  {id:'mac_poivre',name:'Poivre noir',cat:'Épices',profile:'Piquant sec, élégant, long en bouche',spirits:['Gin','Vodka','Bourbon'],method:'Grains entiers légèrement concassés. À froid.',time:'12 à 48h.'},
+  {id:'mac_cafe',name:'Café',cat:'Umami',profile:'Amer torréfié, complexe selon la torréfaction',spirits:['Vodka','Bourbon','Rhum Brun','Whisky'],method:'Grains entiers ou grossièrement concassés. À froid (cold brew style).',time:'12 à 24h à froid. Éviter l\'infusion chaude — trop amer.'},
+  {id:'mac_the_noir',name:'Thé noir',cat:'Umami',profile:'Tannique, structurant, légèrement amer',spirits:['Bourbon','Cognac','Rhum Brun','Gin'],method:'À froid. Les tanins s\'extraient vite — ne pas surmacérer.',time:'1 à 4h maximum.'},
+  {id:'mac_menthe',name:'Menthe fraîche',cat:'Herbes',profile:'Frais, direct, légèrement sucré',spirits:['Rhum Blanc','Vodka','Gin'],method:'Feuilles fraîches non froissées (froisser libère de l\'amertume). À froid.',time:'2 à 6h.'},
+  {id:'mac_romarin',name:'Romarin',cat:'Herbes',profile:'Résineux, boisé, méditerranéen',spirits:['Gin','Vodka','Champagne'],method:'Brins entiers. À froid. Très puissant — doser avec soin.',time:'6 à 12h.'},
+  {id:'mac_thym',name:'Thym',cat:'Herbes',profile:'Herbacé-boisé, subtil, provençal',spirits:['Gin','Vodka','Bourbon'],method:'Brins frais. À froid.',time:'12 à 24h.'},
+  {id:'mac_basilic',name:'Basilic',cat:'Herbes',profile:'Herbacé, anisé, poivré',spirits:['Gin','Vodka','Rhum Blanc'],method:'Feuilles fraîches. À froid uniquement — la chaleur détruit les arômes délicats.',time:'2 à 8h.'},
+  {id:'mac_citron',name:'Zeste de citron',cat:'Agrumes',profile:'Acide vif, zesté, lumineux',spirits:['Vodka','Gin','Rhum Blanc','Tequila'],method:'Zeste uniquement (éviter la partie blanche amère). Épluche-légume pour des rubans.',time:'24 à 72h à froid.'},
+  {id:'mac_orange',name:'Zeste d\'orange',cat:'Agrumes',profile:'Rond, légèrement amer, chaleureux',spirits:['Bourbon','Cognac','Rhum Brun','Vodka'],method:'Zeste uniquement. À froid.',time:'24 à 72h.'},
+  {id:'mac_concombre',name:'Concombre',cat:'Fruits',profile:'Frais, aqueux, neutre — fait ressortir les botaniques',spirits:['Gin','Vodka'],method:'Tranches fines avec la peau. À froid.',time:'4 à 12h.'},
+  {id:'mac_fraise',name:'Fraise',cat:'Fruits',profile:'Fruité franc, légèrement acide',spirits:['Vodka','Rhum Blanc','Gin','Champagne'],method:'Fruits coupés en deux. À froid. Peut fermenter vite — surveiller.',time:'24 à 48h maximum.'},
+  {id:'mac_framb',name:'Framboise',cat:'Fruits',profile:'Vif, fruité, légèrement amer',spirits:['Vodka','Gin','Champagne'],method:'Fruits entiers. À froid.',time:'24 à 48h.'},
+  {id:'mac_peche',name:'Pêche',cat:'Fruits',profile:'Délicat, floral-sucré, estival',spirits:['Bourbon','Cognac','Vodka','Champagne'],method:'Tranches sans noyau. À froid.',time:'24 à 48h.'},
+  {id:'mac_miel',name:'Miel',cat:'Sucrants',profile:'Floral, complexe selon la fleur source',spirits:['Gin','Bourbon','Rhum Brun','Whisky'],method:'Dissoudre le miel dans l\'alcool à température ambiante. Mélanger vigoureusement.',time:'Immédiat — mais laisser 24h pour que les arômes s\'intègrent.'},
+  {id:'mac_champignon',name:'Champignon séché',cat:'Umami',profile:'Terreux, umami profond, sous-bois',spirits:['Mezcal','Whisky','Bourbon','Saké'],method:'Champignons séchés réhydratés ou directement dans l\'alcool. À froid.',time:'24 à 72h.'},
+];
+const fatWashBase=[
+  {id:'fw_bacon',name:'Bacon',profile:'Fumé, gras, salé avec une longueur en bouche unique. Transforme complètement l\'alcool de base.',spirits:['Rhum Brun','Bourbon','Whisky'],method:'Faire fondre le gras de bacon dans une poêle. Laisser tiédir (pas bouillant). Verser dans l\'alcool, mélanger. Congeler 48h minimum. Filtrer au travers d\'un filtre à café.',custom:false},
+  {id:'fw_beurre_noisette',name:'Beurre noisette',profile:'Noisette, toasté, lactique doux. Arrondit l\'alcool sans l\'alourdir.',spirits:['Bourbon','Rhum Brun','Cognac','Vodka'],method:'Cuire le beurre jusqu\'à coloration dorée et odeur de noisette. Laisser tiédir. Même méthode congélateur.',custom:false},
+  {id:'fw_peanut',name:'Beurre de peanut',profile:'Noisette intense, légèrement sucré, gras crémeux. Exceptionnel avec le bourbon.',spirits:['Bourbon','Rhum Brun','Vodka'],method:'Faire fondre doucement au bain-marie. Incorporer dans l\'alcool chaud (pas bouillant). Congeler 48h.',custom:false},
+  {id:'fw_nutella',name:'Nutella',profile:'Chocolat-noisette, sucré, légèrement amer. Cocktail dessert assumé.',spirits:['Vodka','Rhum Brun','Bourbon'],method:'Faire fondre au bain-marie avec un peu d\'eau tiède pour fluidifier. Incorporer. Congeler 48h. Peut être difficile à filtrer — double filtration recommandée.',custom:false},
+  {id:'fw_coco',name:'Huile de coco',profile:'Tropical, légèrement sucré, très doux. Donne une texture soyeuse.',spirits:['Rhum Blanc','Rhum Brun','Vodka','Gin'],method:'Faire fondre (point de fusion bas). Incorporer dans l\'alcool. Congeler 24h. Filtre facilement.',custom:false},
+  {id:'fw_avocat',name:'Avocat',profile:'Gras végétal neutre, crémeux, légèrement herbacé. Texture unique.',spirits:['Tequila','Mezcal','Vodka','Gin'],method:'Mixer l\'avocat et incorporer dans l\'alcool. Congeler 48h. Filtration difficile — utiliser mousseline + filtre café.',custom:false},
+  {id:'fw_olive',name:'Huile d\'olive',profile:'Végétal, légèrement poivré, méditerranéen. Accord classique Dirty Martini amélioré.',spirits:['Gin','Vodka','Mezcal'],method:'Incorporer directement à froid dans l\'alcool. Secouer vigoureusement. Congeler 24h. Filtre proprement.',custom:false},
+  {id:'fw_sesame',name:'Huile de sésame grillé',profile:'Noisette umami intense, asiatique, puissant. Quelques gouttes suffisent.',spirits:['Saké','Vodka','Gin','Whisky'],method:'Très puissant — utiliser 1 c. à soupe max pour 200ml. Même méthode.',custom:false},
+  {id:'fw_truffe',name:'Huile de truffe',profile:'Terreux, luxueux, umami profond. Cocktail gastronomique.',spirits:['Vodka','Gin','Champagne'],method:'Utiliser parcimonieusement. 1 c. à café pour 200ml suffit largement.',custom:false},
+  {id:'fw_foiegras',name:'Foie gras',profile:'Luxueux, riche, légèrement ferreux. Cocktail de chef.',spirits:['Cognac','Bourbon','Sauternes'],method:'Faire fondre doucement. Congeler 72h. Filtration multiple.',custom:false},
+  {id:'fw_parmesan',name:'Parmesan',profile:'Umami lacté, salé, fromage affiné. Surprenant en Martini.',spirits:['Vodka','Gin'],method:'Faire infuser des copeaux dans l\'alcool tiède 1h, puis congeler 48h. Filtrer soigneusement.',custom:false},
+  {id:'fw_miso',name:'Pâte miso',profile:'Umami profond, salé, fermenté. Transforme la vodka en quelque chose de gastronomique.',spirits:['Vodka','Saké','Bourbon'],method:'Diluer le miso dans un peu d\'eau tiède avant d\'incorporer dans l\'alcool. Congeler 48h.',custom:false},
+  {id:'fw_chorizo',name:'Chorizo / Saucisson',profile:'Fumé-épicé, gras, paprika. Bloody Mary territory.',spirits:['Vodka','Mezcal','Bourbon'],method:'Faire fondre le gras à la poêle. Même méthode que bacon.',custom:false},
+  {id:'fw_canard',name:'Gras de canard',profile:'Riche, savoury, volaille confite. Accord classique avec l\'Armagnac.',spirits:['Armagnac','Cognac','Bourbon','Whisky'],method:'Faire fondre. Même méthode congélateur.',custom:false},
+  {id:'fw_noisette',name:'Noisette grillée',profile:'Noisette intense, toasté, légèrement amer.',spirits:['Bourbon','Cognac','Rhum Brun'],method:'Torréfier les noisettes, les concasser grossièrement. Infuser dans l\'alcool 24h à température ambiante, puis congeler.',custom:false},
+  {id:'fw_amande',name:'Amande grillée',profile:'Doux, noisette légère, légèrement sucré.',spirits:['Cognac','Bourbon','Vodka'],method:'Torréfier légèrement. Concasser. Infuser 24h puis congeler.',custom:false},
+  {id:'fw_tahini',name:'Tahini',profile:'Sésame intense, légèrement amer, crémeux.',spirits:['Vodka','Bourbon','Saké'],method:'Diluer avec un peu d\'eau tiède. Incorporer dans l\'alcool. Congeler 48h.',custom:false},
+  {id:'fw_chocolat',name:'Chocolat noir (gras de cacao)',profile:'Amer, terreux, chocolat intense. Pas sucré — c\'est le gras qui compte.',spirits:['Rhum Brun','Bourbon','Vodka'],method:'Faire fondre du chocolat noir 70%+ au bain-marie. Incorporer dans l\'alcool chaud. Congeler 48h.',custom:false},
+  {id:'fw_lardon',name:'Lardon fumé',profile:'Fumé intense, salé, plus puissant que le bacon normal.',spirits:['Bourbon','Whisky','Mezcal'],method:'Faire rendre le gras complètement. Même méthode bacon.',custom:false},
+  {id:'fw_beurre_erable',name:'Beurre d\'érable',profile:'Sucré-caramel, sirop d\'érable, typiquement québécois.',spirits:['Bourbon','Rhum Brun','Vodka'],method:'Faire fondre doucement. Congeler 48h.',custom:false},
+  {id:'fw_poutine',name:'Gras de sauce brune (poutine)',profile:'Umami, bœuf, sauce, nostalgique. Le fat wash le plus québécois possible.',spirits:['Bourbon','Vodka','Rhum Brun'],method:'Récupérer le gras flottant sur une sauce brune maison refroidie. Même méthode.',custom:false},
+  {id:'fw_burger',name:'Gras de burger',profile:'Bœuf grillé, fumé, umami. Saveur de BBQ en verre.',spirits:['Bourbon','Mezcal','Whisky'],method:'Récupérer le gras de cuisson d\'un burger à 80%+ bœuf. Filtrer les solides avant d\'incorporer.',custom:false},
+  {id:'fw_lard',name:'Lard (saindoux)',profile:'Gras de porc neutre, crémeux, base idéale pour fat wash discret.',spirits:['Bourbon','Rhum Brun','Vodka'],method:'Faire fondre complètement. Filtrer les solides. Même méthode.',custom:false},
+  {id:'fw_beurre_cafe',name:'Beurre au café',profile:'Torréfié, beurré, riche. Coffee butter cocktail.',spirits:['Bourbon','Vodka','Rhum Brun'],method:'Faire infuser du café moulu dans du beurre fondu 30 min. Filtrer le café. Incorporer le beurre infusé.',custom:false},
+  {id:'fw_coconut_cream',name:'Crème de coco (grasse)',profile:'Tropical crémeux, sucré léger, texture veloutée.',spirits:['Rhum Blanc','Rhum Brun','Vodka'],method:'La partie solide de la crème de coco. Faire fondre doucement. Congeler 48h.',custom:false},
+  {id:'fw_huile_truffee',name:'Beurre clarifié',profile:'Laiteux doux, neutre, arrondit sans ajouter de saveur forte.',spirits:['Cognac','Bourbon','Vodka'],method:'Ghee ou beurre clarifié maison. Facile à filtrer une fois congelé.',custom:false},
+  {id:'fw_noix_coco_grilee',name:'Noix de coco grillée',profile:'Tropical toasté, légèrement fumé, noisette exotique.',spirits:['Rhum Brun','Bourbon','Mezcal'],method:'Griller la noix de coco râpée jusqu\'à coloration dorée. Faire fondre dans l\'alcool tiède. Congeler 48h.',custom:false},
+  {id:'fw_mac_cheese',name:'Macaroni au fromage (gras)',profile:'Fromage fondu, umami lacté, confort food en verre. Pour les audacieux.',spirits:['Vodka','Bourbon'],method:'Récupérer le gras d\'un mac and cheese maison en refroidissant au frigo. Même méthode.',custom:false},
+];
+
+
+// ── CATEGORIES MAP ────────────────────────────────────────────────────────────
+const catLabels={fruits:'Fruits',epices:'Épices',herbes:'Herbes',umami:'Umami / Salé',floral:'Floral',boise:'Boisé'};
+const catOrder=['fruits','epices','herbes','umami','floral','boise'];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let currentTab='ingredients';
+let selectedIngId=null;
+let selectedSpiId=null;
+let selectedMacId=null;
+let selectedFWId=null;
+let comboContext={id1:null,id2:null};
+let customFatWash=[];
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function setTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.nav-tab').forEach((b,i)=>{
+    b.classList.toggle('active',['ingredients','spirits','techniques'][i]===tab);
+  });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if(tab==='ingredients') renderIngGrid(null);
+  if(tab==='spirits') renderSpiGrid();
+  if(tab==='techniques'){loadCustomFW();renderMacGrid();if(currentTechTab==='fatwash')renderFWGrid();}
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function todayStr(){return new Date().toISOString().split('T')[0];}
+
+function getEffectivePairings(id){
+  const harmony=new Set(pairings[id]?.harmony||[]);
+  const contrast=new Set(pairings[id]?.contrast||[]);
+  ingredients.forEach(ing=>{
+    if(ing.id===id)return;
+    const p=pairings[ing.id];if(!p)return;
+    if(p.harmony.includes(id))harmony.add(ing.id);
+    if(p.contrast.includes(id))contrast.add(ing.id);
+  });
+  return{harmony,contrast};
+}
+
+function getCombo(id1,id2,isHarmony){
+  const k1=id1+'+'+id2,k2=id2+'+'+id1;
+  if(curatedCombos[k1])return{...curatedCombos[k1],auto:false};
+  if(curatedCombos[k2])return{...curatedCombos[k2],auto:false};
+  const i1=ingredients.find(i=>i.id===id1)||spirits.find(s=>s.id===id1);
+  const i2=ingredients.find(i=>i.id===id2)||spirits.find(s=>s.id===id2);
+  const spiritSuggestions={fruits:['Rhum Blanc','Gin'],epices:['Rhum Brun','Bourbon'],herbes:['Gin','Vodka'],umami:['Bourbon','Mezcal'],floral:['Gin','Champagne'],boise:['Bourbon','Whisky']};
+  const sug=i1?.cat?spiritSuggestions[i1.cat]:['Gin','Vodka'];
+  if(isHarmony){
+    return{goût:`${i1?.profile||i1?.label} rencontre ${i2?.profile||i2?.label}. Accord naturel, même famille aromatique — le résultat est fluide et cohérent.`,cocktail:`Base recommandée : ${sug?.[0]||'Gin'} ou ${sug?.[1]||'Vodka'}. Sirop ${(i1?.label||'').toLowerCase()}-${(i2?.label||'').toLowerCase()}, acide (citron ou lime), garnir selon l'ingrédient dominant.`,auto:true};
+  } else {
+    return{goût:`${i1?.profile||i1?.label} contre ${i2?.profile||i2?.label}. Opposition créative — tension gustative qui demande de l'équilibre dans les proportions.`,cocktail:`Base recommandée : ${sug?.[0]||'Gin'}. Commencer ratio 3:1 (${(i1?.label||'').toLowerCase()} dominant), ajuster. L'acide est souvent nécessaire pour lier.`,auto:true};
+  }
+}
+
+// ── INGREDIENTS GRID ──────────────────────────────────────────────────────────
+function renderIngGrid(filter){
+  const grid=document.getElementById('ing-grid');
+  grid.innerHTML='';
+  let hasPairings=selectedIngId!=null;
+  let harmony=new Set(),contrast=new Set();
+  if(hasPairings){const p=getEffectivePairings(selectedIngId);harmony=p.harmony;contrast=p.contrast;}
+
+  catOrder.forEach(cat=>{
+    let items=ingredients.filter(i=>i.cat===cat);
+    if(filter) items=items.filter(i=>i.label.toLowerCase().includes(filter.toLowerCase()));
+    if(!items.length)return;
+    const hdr=document.createElement('div');
+    hdr.className='cat-header';hdr.textContent=catLabels[cat];
+    grid.appendChild(hdr);
+    const g=document.createElement('div');g.className='items-grid';
+    items.forEach(ing=>{
+      const card=document.createElement('div');
+      card.className='item-card';
+      if(ing.id===selectedIngId) card.classList.add('selected');
+      else if(hasPairings){
+        if(harmony.has(ing.id)) card.classList.add('harmony');
+        else if(contrast.has(ing.id)) card.classList.add('contrast');
+        else card.classList.add('dimmed');
+      }
+      const badge=harmony.has(ing.id)?'<div class="card-badge h">▲ Harmonie</div>':
+                  contrast.has(ing.id)?'<div class="card-badge c">↔ Contraste</div>':'';
+      card.innerHTML=`<div class="card-name">${ing.label}</div><div class="card-profile">${ing.profile}</div>${badge}`;
+      card.addEventListener('click',()=>onIngClick(ing.id));
+      g.appendChild(card);
+    });
+    grid.appendChild(g);
+  });
+}
+
+function filterIngredients(val){renderIngGrid(val);}
+
+function onIngClick(id){
+  if(selectedIngId===id){
+    // Deselect
+    selectedIngId=null;
+    document.getElementById('ing-detail').innerHTML='';
+    renderIngGrid(document.getElementById('ing-search').value);
+    return;
+  }
+  // If another ingredient already selected — show combo
+  if(selectedIngId){
+    const p=getEffectivePairings(selectedIngId);
+    const isH=p.harmony.has(id),isC=p.contrast.has(id);
+    if(isH||isC){
+      openCombo(selectedIngId,id,isH);
+      return;
+    }
+  }
+  // Select this ingredient
+  selectedIngId=id;
+  const ing=ingredients.find(i=>i.id===id);
+  renderIngDetail(ing);
+  renderIngGrid(document.getElementById('ing-search').value);
+  document.getElementById('ing-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderIngDetail(ing){
+  const p=getEffectivePairings(ing.id);
+  const hPills=[...p.harmony].map(hid=>{
+    const h=ingredients.find(i=>i.id===hid);
+    return h?`<span class="pill h" onclick="openCombo('${ing.id}','${hid}',true)">${h.label} →</span>`:'';
+  }).join('');
+  const cPills=[...p.contrast].map(cid=>{
+    const c=ingredients.find(i=>i.id===cid);
+    return c?`<span class="pill c" onclick="openCombo('${ing.id}','${cid}',false)">${c.label} →</span>`:'';
+  }).join('');
+  const note=pairings[ing.id]?.note||'';
+  document.getElementById('ing-detail').innerHTML=`
+    <div class="detail-panel">
+      <div class="detail-title">${ing.label}</div>
+      <div class="detail-row"><div class="detail-label">Profil</div><div class="detail-text">${ing.profile}</div></div>
+      <div class="detail-row"><div class="detail-label">▲ Harmonie</div><div class="pills">${hPills}</div></div>
+      <div class="detail-row"><div class="detail-label">↔ Contraste</div><div class="pills">${cPills}</div></div>
+      ${note?`<div class="detail-row"><div class="detail-label">Note</div><div class="detail-text" style="font-size:.65rem;opacity:.75;">${note}</div></div>`:''}
+      <div class="notes-section">
+        <div class="notes-header"><span class="notes-title">📋 Mes notes</span><button class="add-note-btn" onclick="addNoteFor('ing')">+ Note</button></div>
+        <div id="notes-list-ing"></div>
+      </div>
+      <button class="back-btn" onclick="deselectIng()">← Retour</button>
+    </div>`;
+  renderNotesInto('notes-list-ing',ing.id,null);
+}
+
+function deselectIng(){
+  selectedIngId=null;
+  document.getElementById('ing-detail').innerHTML='';
+  renderIngGrid(document.getElementById('ing-search').value);
+}
+
+// ── SPIRITS GRID ──────────────────────────────────────────────────────────────
+function renderSpiGrid(){
+  const grid=document.getElementById('spi-grid');
+  grid.innerHTML='';
+  const g=document.createElement('div');g.className='items-grid';
+  spirits.forEach(spirit=>{
+    const card=document.createElement('div');
+    card.className='item-card'+(spirit.id===selectedSpiId?' selected':'');
+    card.innerHTML=`<div class="card-name">${spirit.label}</div><div class="card-profile">${spirit.desc.split('.')[0]}</div>`;
+    card.addEventListener('click',()=>onSpiClick(spirit.id));
+    g.appendChild(card);
+  });
+  grid.appendChild(g);
+}
+
+function onSpiClick(id){
+  if(selectedSpiId===id){
+    selectedSpiId=null;
+    document.getElementById('spi-detail').innerHTML='';
+    renderSpiGrid();return;
+  }
+  selectedSpiId=id;
+  const spirit=spirits.find(s=>s.id===id);
+  renderSpiDetail(spirit);
+  renderSpiGrid();
+  document.getElementById('spi-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderSpiDetail(spirit){
+  const compatPills=spirit.compatible.map(cid=>{
+    const ing=ingredients.find(i=>i.id===cid);
+    return ing?`<span class="pill s" onclick="openSpiCombo('${spirit.id}','${cid}')">${ing.label} →</span>`:'';
+  }).join('');
+  document.getElementById('spi-detail').innerHTML=`
+    <div class="detail-panel">
+      <div class="detail-title">${spirit.label}</div>
+      <div class="detail-row"><div class="detail-label">Caractère</div><div class="detail-text">${spirit.desc}</div></div>
+      <div class="detail-row"><div class="detail-label">Ingrédients compatibles</div><div class="pills">${compatPills}</div></div>
+      <div class="notes-section">
+        <div class="notes-header"><span class="notes-title">📋 Mes notes</span><button class="add-note-btn" onclick="addNoteFor('spirit')">+ Note</button></div>
+        <div id="notes-list-spirit"></div>
+      </div>
+      <button class="back-btn" onclick="deselectSpi()">← Retour</button>
+    </div>`;
+  renderNotesInto('notes-list-spirit',spirit.id,null);
+}
+
+function deselectSpi(){
+  selectedSpiId=null;
+  document.getElementById('spi-detail').innerHTML='';
+  renderSpiGrid();
+}
+
+function openSpiCombo(spiritId,ingId){
+  const spirit=spirits.find(s=>s.id===spiritId);
+  const ing=ingredients.find(i=>i.id===ingId);
+  comboContext={id1:spiritId,id2:ingId};
+  document.getElementById('co-title').textContent=`${spirit.label} × ${ing.label}`;
+  document.getElementById('co-type').textContent='🍾 Accord alcool — ingrédient compatible';
+  document.getElementById('co-type').className='detail-type s';
+  document.getElementById('co-gout').textContent=`${ing.profile}. Sur base ${spirit.label.toLowerCase()} — ${spirit.desc.split('.')[0].toLowerCase()}.`;
+  document.getElementById('co-cocktail').textContent=`Sirop ${ing.label.toLowerCase()} dans ${spirit.label}. Acide si fruité, garnir selon l'ingrédient dominant. Note tes essais ci-dessous.`;
+  document.getElementById('co-auto').textContent='* Suggestion générique — documente tes propres tests.';
+  renderNotesInto('notes-list-combo',spiritId,ingId);
+  document.getElementById('combo-overlay').classList.add('open');
+}
+
+// ── COMBO OVERLAY ─────────────────────────────────────────────────────────────
+function openCombo(id1,id2,isHarmony){
+  const i1=ingredients.find(i=>i.id===id1);
+  const i2=ingredients.find(i=>i.id===id2);
+  comboContext={id1,id2};
+  const combo=getCombo(id1,id2,isHarmony);
+  document.getElementById('co-title').textContent=`${i1.label} × ${i2.label}`;
+  const typeEl=document.getElementById('co-type');
+  typeEl.textContent=isHarmony?'▲ Accord harmonieux':'↔ Accord contrasté';
+  typeEl.className='detail-type '+(isHarmony?'h':'c');
+  document.getElementById('co-gout').textContent=combo.goût;
+  document.getElementById('co-cocktail').textContent=combo.cocktail;
+  document.getElementById('co-auto').textContent=combo.auto?'* Description générée — à valider par le test.':'';
+  renderNotesInto('notes-list-combo',id1,id2);
+  document.getElementById('combo-overlay').classList.add('open');
+}
+
+function closeCombo(){
+  document.getElementById('combo-overlay').classList.remove('open');
+}
+
+// ── TECHNIQUES ────────────────────────────────────────────────────────────────
+let currentTechTab='maceration';
+
+function setTechTab(tab){
+  currentTechTab=tab;
+  document.getElementById('tt-mac').classList.toggle('active',tab==='maceration');
+  document.getElementById('tt-fw').classList.toggle('active',tab==='fatwash');
+  document.getElementById('tech-mac').style.display=tab==='maceration'?'block':'none';
+  document.getElementById('tech-fw').style.display=tab==='fatwash'?'block':'none';
+  if(tab==='fatwash')renderFWGrid();
+}
+
+function renderMacGrid(){
+  const grid=document.getElementById('mac-grid');
+  grid.innerHTML='';
+  const cats=[...new Set(macerations.map(m=>m.cat))];
+  cats.forEach(cat=>{
+    const items=macerations.filter(m=>m.cat===cat);
+    const hdr=document.createElement('div');hdr.className='cat-header';hdr.textContent=cat;
+    grid.appendChild(hdr);
+    const g=document.createElement('div');g.className='items-grid';
+    items.forEach(m=>{
+      const card=document.createElement('div');
+      card.className='item-card'+(selectedMacId===m.id?' selected':'');
+      card.innerHTML=`<div class="card-name">${m.name}</div><div class="card-profile">${m.profile.split(',')[0]}</div>`;
+      card.addEventListener('click',()=>selectMac(m.id));
+      g.appendChild(card);
+    });
+    grid.appendChild(g);
+  });
+}
+
+function selectMac(id){
+  selectedMacId=id;
+  const m=macerations.find(x=>x.id===id);
+  const sPills=m.spirits.map(s=>`<span class="pill neutral" style="cursor:default">${s}</span>`).join('');
+  document.getElementById('mac-detail').innerHTML=`
+    <div class="detail-panel">
+      <div class="detail-title">${m.name}</div>
+      <div class="detail-row"><div class="detail-label">Profil aromatique</div><div class="detail-text">${m.profile}</div></div>
+      <div class="detail-row"><div class="detail-label">Alcools recommandés</div><div class="pills">${sPills}</div></div>
+      <div class="detail-row"><div class="detail-label">Méthode</div><div class="detail-text">${m.method}</div></div>
+      <div class="detail-row"><div class="detail-label">Temps d'infusion</div><div class="detail-text">${m.time}</div></div>
+      <div class="notes-section">
+        <div class="notes-header"><span class="notes-title">📋 Mes notes</span><button class="add-note-btn" onclick="addNoteFor('mac')">+ Note</button></div>
+        <div id="notes-list-mac"></div>
+      </div>
+      <button class="back-btn" onclick="closeMac()">← Retour</button>
+    </div>`;
+  renderNotesInto('notes-list-mac',id,null);
+  document.getElementById('mac-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+  renderMacGrid();
+}
+
+function closeMac(){
+  selectedMacId=null;
+  document.getElementById('mac-detail').innerHTML='';
+  renderMacGrid();
+}
+
+function renderFWGrid(){
+  const grid=document.getElementById('fw-grid');
+  grid.innerHTML='';
+  const all=[...fatWashBase,...customFatWash];
+  const g=document.createElement('div');g.className='items-grid';
+  all.forEach(fw=>{
+    const card=document.createElement('div');
+    card.className='item-card'+(selectedFWId===fw.id?' selected':'')+(fw.custom?' ':'');
+    card.style.borderStyle=fw.custom?'dashed':'solid';
+    card.innerHTML=`<div class="card-name">${fw.name}</div><div class="card-profile">${fw.spirits.slice(0,2).join(', ')}</div>`;
+    card.addEventListener('click',()=>selectFW(fw.id));
+    g.appendChild(card);
+  });
+  grid.appendChild(g);
+}
+
+function selectFW(id){
+  selectedFWId=id;
+  const all=[...fatWashBase,...customFatWash];
+  const fw=all.find(x=>x.id===id);
+  const sPills=fw.spirits.map(s=>`<span class="pill neutral" style="cursor:default">${s}</span>`).join('');
+  document.getElementById('fw-detail').innerHTML=`
+    <div class="detail-panel">
+      <div class="detail-title">${fw.name}</div>
+      <div class="detail-row"><div class="detail-label">Profil de goût</div><div class="detail-text">${fw.profile}</div></div>
+      <div class="detail-row"><div class="detail-label">Alcools recommandés</div><div class="pills">${sPills}</div></div>
+      <div class="detail-row"><div class="detail-label">Méthode</div><div class="detail-text">${fw.method}</div></div>
+      <div class="notes-section">
+        <div class="notes-header"><span class="notes-title">📋 Mes notes</span><button class="add-note-btn" onclick="addNoteFor('fw')">+ Note</button></div>
+        <div id="notes-list-fw"></div>
+      </div>
+      <button class="back-btn" onclick="closeFW()">← Retour</button>
+    </div>`;
+  renderNotesInto('notes-list-fw',id,null);
+  document.getElementById('fw-detail').scrollIntoView({behavior:'smooth',block:'nearest'});
+  renderFWGrid();
+}
+
+function closeFW(){
+  selectedFWId=null;
+  document.getElementById('fw-detail').innerHTML='';
+  renderFWGrid();
+}
+
+function loadCustomFW(){
+  try{customFatWash=JSON.parse(localStorage.getItem('custom_fw')||'[]');}catch(e){customFatWash=[];}
+}
+function saveCustomFWList(){localStorage.setItem('custom_fw',JSON.stringify(customFatWash));}
+function openAddFW(){document.getElementById('fw-modal').classList.add('open');}
+function closeAddFW(){
+  document.getElementById('fw-modal').classList.remove('open');
+  ['fw-new-name','fw-new-profile','fw-new-spirits','fw-new-method'].forEach(id=>document.getElementById(id).value='');
+}
+function saveCustomFW(){
+  const name=document.getElementById('fw-new-name').value.trim();
+  if(!name)return;
+  const profile=document.getElementById('fw-new-profile').value.trim()||'Profil à documenter.';
+  const raw=document.getElementById('fw-new-spirits').value.trim();
+  const spirits_list=raw?raw.split(',').map(s=>s.trim()).filter(Boolean):['À définir'];
+  const method=document.getElementById('fw-new-method').value.trim()||'Même méthode congélateur standard.';
+  customFatWash.push({id:'fw_custom_'+Date.now(),name,profile,spirits:spirits_list,method,custom:true});
+  saveCustomFWList();closeAddFW();renderFWGrid();
+}
+
+// ── NOTES ─────────────────────────────────────────────────────────────────────
+function notesKey(id1,id2){
+  if(!id2)return'notes_'+id1;
+  return'notes_'+[id1,id2].sort().join('__');
+}
+function loadNotes(id1,id2){
+  try{return JSON.parse(localStorage.getItem(notesKey(id1,id2))||'[]');}catch(e){return[];}
+}
+function saveNotes(id1,id2,notes){localStorage.setItem(notesKey(id1,id2),JSON.stringify(notes));}
+
+function renderNotesInto(listId,id1,id2){
+  const list=document.getElementById(listId);if(!list)return;
+  const notes=loadNotes(id1,id2||null);
+  if(!notes.length){list.innerHTML='<div class="no-notes">Aucune note — clique + pour ajouter.</div>';return;}
+  list.innerHTML='';
+  notes.forEach((note,idx)=>{
+    const d=document.createElement('div');d.className='note-entry';
+    const i2=id2||'';
+    d.innerHTML=`<div class="note-date"><input type="date" value="${note.date}" onchange="updateNoteDate('${id1}','${i2}',${idx},this.value)"></div>
+    <textarea class="note-text" rows="2" placeholder="Fat wash 48h, ratio..." onchange="updateNoteText('${id1}','${i2}',${idx},this.value)">${note.text}</textarea>
+    <button class="note-delete" onclick="deleteNote('${id1}','${i2}',${idx},'${listId}')">✕</button>`;
+    list.appendChild(d);
+  });
+}
+
+function addNoteFor(ctx){
+  let id1,id2,listId;
+  if(ctx==='ing'){id1=selectedIngId;id2=null;listId='notes-list-ing';}
+  else if(ctx==='spirit'){id1=selectedSpiId;id2=null;listId='notes-list-spirit';}
+  else if(ctx==='combo'){id1=comboContext.id1;id2=comboContext.id2;listId='notes-list-combo';}
+  else if(ctx==='mac'){id1=selectedMacId;id2=null;listId='notes-list-mac';}
+  else if(ctx==='fw'){id1=selectedFWId;id2=null;listId='notes-list-fw';}
+  if(!id1)return;
+  const notes=loadNotes(id1,id2||null);
+  notes.unshift({date:todayStr(),text:''});
+  saveNotes(id1,id2||null,notes);
+  renderNotesInto(listId,id1,id2||null);
+  setTimeout(()=>{const f=document.querySelector('#'+listId+' .note-text');if(f)f.focus();},80);
+}
+function updateNoteDate(id1,id2,idx,val){const n=loadNotes(id1,id2||null);if(n[idx])n[idx].date=val;saveNotes(id1,id2||null,n);}
+function updateNoteText(id1,id2,idx,val){const n=loadNotes(id1,id2||null);if(n[idx])n[idx].text=val;saveNotes(id1,id2||null,n);}
+function deleteNote(id1,id2,idx,listId){const n=loadNotes(id1,id2||null);n.splice(idx,1);saveNotes(id1,id2||null,n);renderNotesInto(listId,id1,id2||null);}
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+renderIngGrid(null);
+</script>
+</body>
+</html>

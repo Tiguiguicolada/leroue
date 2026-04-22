@@ -681,8 +681,8 @@ function onIngClick(id){
 
 function renderIngDetail(ing){
   const p=getEffectivePairings(ing.id);
-  const hPills=[...p.harmony].map(hid=>{const h=[...ingredients,...customIngredients].find(i=>i.id===hid);return h?`<span class="pill h" onclick="openCombo('${ing.id}','${hid}',true)">${h.label} →</span>`:''}).join('');
-  const cPills=[...p.contrast].map(cid=>{const c=[...ingredients,...customIngredients].find(i=>i.id===cid);return c?`<span class="pill c" onclick="openCombo('${ing.id}','${cid}',false)">${c.label} →</span>`:''}).join('');
+  const hPills=[...p.harmony].map(hid=>{const h=[...ingredients,...customIngredients].find(i=>i.id===hid);return h?`<span class="pill h" onclick="openCombo('${ing.id}','${hid}',true,false)">${h.label} →</span>`:''}).join('');
+  const cPills=[...p.contrast].map(cid=>{const c=[...ingredients,...customIngredients].find(i=>i.id===cid);return c?`<span class="pill c" onclick="openCombo('${ing.id}','${cid}',false,true)">${c.label} →</span>`:''}).join('');
   const note=pairings[ing.id]?.note||ing.note||'';
   const delBtn=ing.custom?`<button class="back-btn" style="border-color:#c97a4c;color:#c97a4c;margin-left:.5rem;" onclick="deleteCustomIng('${ing.id}')">✕ Supprimer</button>`:'';
   document.getElementById('ing-detail').innerHTML=`

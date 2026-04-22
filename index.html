@@ -871,7 +871,8 @@ Sois direct et enthousiaste comme un bartender passionné.`;
     const combo=getCombo(id1,id2,isHarmony);
     document.getElementById('co-gout').textContent=combo.goût;
     document.getElementById('co-cocktail').textContent=combo.cocktail;
-    document.getElementById('co-auto').textContent='* Description générique — à valider par le test.';
+    document.getElementById('co-auto').textContent='* Description de base — clique ↺ Regénérer pour une analyse IA détaillée.';
+    addRegenButton(id1,id2,isHarmony,isContrast);
   }
 }
 function closeCombo(){document.getElementById('combo-overlay').classList.remove('open');}

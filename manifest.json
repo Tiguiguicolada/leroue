@@ -1,0 +1,17 @@
+{
+  "name": "Grimoire du Bar",
+  "short_name": "Grimoire",
+  "description": "Recueil des saveurs et mariages aromatiques — mixologie québécoise",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0804",
+  "theme_color": "#8a5a20",
+  "lang": "fr-CA",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
